@@ -4,12 +4,23 @@
 //
 
 import UIKit
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
+    private let remindActionID = "RemindAction"
+    private let markAsPaidActionID = "MarkAsPaidAction"
+    
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        let remindAction = UNNotificationAction(identifier: remindActionID, title: "Recordarme después", options: [])
+        let markAsPaidAction = UNNotificationAction(identifier: markAsPaidActionID, title: "Marcar como pagada", options: [.authenticationRequired])
+        
+        let category = UNNotificationCategory(identifier: Bill.notificationCategoryID, actions: [remindAction, markAsPaidAction], intentIdentifiers: [], options: [])
+        
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+        UNUserNotificationCenter.current().delegate = self
         
         return true
     }
