@@ -31,8 +31,12 @@ extension Bill {
     }
     
     
-    func removeReminder() {
-        
+    mutating func removeReminder() {
+        if let id = notificationID {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
+            notificationID = nil
+            remindDate = nil
+        }
     }
     
     mutating func scheduleReminder(on date: Date , completion: @escaping (Bool) -> ()) {
