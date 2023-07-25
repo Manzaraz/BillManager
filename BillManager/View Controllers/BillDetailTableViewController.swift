@@ -51,7 +51,7 @@ class BillDetailTableViewController: UITableViewController, UITextFieldDelegate 
         updateDueDateUI()
         
         if let bill = bill {
-            title = "Edit Bill"
+            title = "Editar Cuenta"
             payeeTextField.text = bill.payee
             amountTextField.text = String(format: "%@", arguments: [(bill.amount ?? 0).formatted(.number.precision(.fractionLength(2)))])
             if let dueDate = bill.dueDate {
@@ -66,7 +66,7 @@ class BillDetailTableViewController: UITableViewController, UITextFieldDelegate 
             updatePaymentUI()
             navigationItem.leftBarButtonItem = nil
         } else {
-            title = "Add Bill"
+            title = "Agregar cuenta"
             navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelButtonTapped))
         }
     }
@@ -90,7 +90,7 @@ class BillDetailTableViewController: UITableViewController, UITextFieldDelegate 
     
     func updatePaymentUI() {
         if paidSwitch.isOn {
-            paidStatusLabel.text = "Yes"
+            paidStatusLabel.text = "Si"
             paidDateLabel.text = Date().formatted(date: .abbreviated, time: .omitted)
         } else {
             paidStatusLabel.text = "No"
@@ -177,6 +177,18 @@ class BillDetailTableViewController: UITableViewController, UITextFieldDelegate 
             return 44
         }
     }
+    
+    func presentNeedAuthorizationAlert() {
+        let alert = UIAlertController(title: "Se Necesita Autorización", message: "No podemos poner los recordatorios para ti, sin los permisos de notificaciones. Por favor vaya a la applicación de Configuraciones de iOS y activa los permisos de notificaciones, si es que deseas hacer uso de los recordatorios", preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "Comprendo", style: .default, handler: nil)
+        
+        alert.addAction(okAction)
+        
+        present(alert, animated: true, completion: nil)
+        
+        
+    }
+    
         
     @IBAction func dueDatePickerValueChanged(_ sender: UIDatePicker) {
         updateDueDateUI()
@@ -209,9 +221,16 @@ class BillDetailTableViewController: UITableViewController, UITextFieldDelegate 
         bill.paidDate = paidDate
         
         if remindSwitch.isOn {
-            bill.remindDate = remindDatePicker.date
+            bill.scheduleReminder(on: remindDatePicker.date) { (updatedBill) in
+                if updatedBill.notificationID == nil {
+                    self.presentNeedAuthorizationAlert()
+                }
+                
+                Database.shared.updateAndSave(updatedBill)
+            }
         } else {
-            bill.remindDate = nil
+            bill.removeReminder()
+            Database.shared.updateAndSave(bill)
         }
         
         Database.shared.updateAndSave(bill)
